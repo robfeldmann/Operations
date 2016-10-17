@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name              = "Operations"
-  s.version           = "2.10.1"
+  s.version           = "3.3.1"
   s.summary           = "Powerful NSOperation subclasses in Swift."
   s.description       = <<-DESC
   
@@ -8,12 +8,11 @@ A Swift framework inspired by Apple's WWDC 2015
 session Advanced NSOperations: https://developer.apple.com/videos/wwdc/2015/?id=226
 
                        DESC
-  s.homepage          = "https://github.com/danthorpe/Operations"
+  s.homepage          = "https://github.com/ProcedureKit/ProcedureKit"
   s.license           = 'MIT'
   s.author            = { "Daniel Thorpe" => "@danthorpe" }
-  s.source            = { :git => "https://github.com/danthorpe/Operations.git", :tag => s.version.to_s }
+  s.source            = { :git => "https://github.com/ProcedureKit/ProcedureKit.git", :tag => s.version.to_s }
   s.module_name       = 'Operations'
-  s.documentation_url = 'http://docs.danthorpe.me/operations/2.10.0/index.html'
   s.social_media_url  = 'https://twitter.com/danthorpe'
   s.requires_arc      = true
   s.ios.deployment_target = '8.0'
@@ -26,49 +25,45 @@ session Advanced NSOperations: https://developer.apple.com/videos/wwdc/2015/?id=
 
   # Creates a framework suitable for an iOS, watchOS, tvOS or Mac OS application
   s.subspec 'Standard' do |ss|
-    ss.source_files      = [
+    ss.source_files = [
       'Sources/Core/Shared', 
       'Sources/Core/iOS',       
       'Sources/Features/Shared',
       'Sources/Features/iOS'
     ]
+    ss.exclude_files = [
+      'Sources/Extras/CloudKit/Shared', 
+      'Sources/Extras/Calendar/Shared',
+      'Sources/Extras/Passbook/iOS',
+      'Sources/Extras/Photos/iOS',
+      'Sources/Extras/Location/iOS',
+      'Sources/Extras/Health/iOS'      
+    ]
     ss.ios.exclude_files = [
-      'Sources/Features/Shared/CloudCapability.swift',
-      'Sources/Features/Shared/CloudKit*.swift',			
-      'Sources/Features/iOS/PhotosCapability.swift',
-      'Sources/Features/iOS/PassbookCapability.swift'
+      'Sources/Features/Shared/TaskOperation.swift',
     ]
     ss.watchos.exclude_files = [
       'Sources/Core/iOS',
-      'Sources/Features/iOS/LocationCapability.swift',
-      'Sources/Features/iOS/LocationOperations.swift',
-      'Sources/Features/iOS/PhotosCapability.swift',
+      'Sources/Features/Shared/ReachabilityCondition.swift',
+      'Sources/Features/Shared/ReachableOperation.swift',
+      'Sources/Features/Shared/Reachability.swift',
+      'Sources/Features/Shared/TaskOperation.swift',      
       'Sources/Features/iOS/RemoteNotificationCondition.swift',
       'Sources/Features/iOS/UserConfirmationCondition.swift',
       'Sources/Features/iOS/UserNotificationCondition.swift',
       'Sources/Features/iOS/WebpageOperation.swift',
-      'Sources/Features/Shared/CloudCapability.swift',
-      'Sources/Features/Shared/ReachabilityCondition.swift',
-      'Sources/Features/Shared/CloudKit*.swift',
-      'Sources/Features/Shared/ReachableOperation.swift',
-      'Sources/Features/Shared/Reachability.swift'
+      'Sources/Features/iOS/OpenInSafariOperation.swift'
     ]
     ss.tvos.exclude_files = [
-      'Sources/Features/iOS/HealthCapability.swift',
-      'Sources/Features/iOS/LocationCapability.swift',
-      'Sources/Features/iOS/LocationOperations.swift',      
-      'Sources/Features/iOS/PassbookCapability.swift',
-      'Sources/Features/iOS/PhotosCapability.swift',
+      'Sources/Features/Shared/TaskOperation.swift',                  
       'Sources/Features/iOS/RemoteNotificationCondition.swift',
       'Sources/Features/iOS/UserNotificationCondition.swift',
       'Sources/Features/iOS/WebpageOperation.swift',
-      'Sources/Features/Shared/CalendarCapability.swift',
+      'Sources/Features/iOS/OpenInSafariOperation.swift'
     ]
     ss.osx.exclude_files = [
       'Sources/Core/iOS',
       'Sources/Features/iOS',
-      'Sources/Features/Shared/CloudCapability.swift',
-      'Sources/Features/Shared/CloudKit*.swift'
     ]
   end
 
@@ -84,33 +79,24 @@ session Advanced NSOperations: https://developer.apple.com/videos/wwdc/2015/?id=
     ss.exclude_files = [
       'Sources/Core/iOS/BackgroundObserver.swift',
       'Sources/Core/iOS/NetworkObserver.swift',
+      'Sources/Features/Shared/TaskOperation.swift',
       'Sources/Features/iOS/HealthCapability.swift',
       'Sources/Features/iOS/LocationCapability.swift',
       'Sources/Features/iOS/LocationOperations.swift',
-      'Sources/Features/iOS/RemoteNotificationCondition.swift',
+      'Sources/Features/iOS/OpenInSafariOperation.swift',      
+      'Sources/Features/iOS/RemoteNotificationCondition.swift',      
       'Sources/Features/iOS/UserNotificationCondition.swift'
     ]
     ss.tvos.exclude_files = [
       'Sources/Features/iOS/PassbookCapability.swift',
       'Sources/Features/iOS/PhotosCapability.swift',
       'Sources/Features/iOS/WebpageOperation.swift',
+      'Sources/Features/iOS/OpenInSafariOperation.swift',      
       'Sources/Features/Shared/CalendarCapability.swift'
     ]
     ss.osx.exclude_files = [
       'Sources/Core/iOS',
       'Sources/Features/iOS'
-    ]
-  end
-
-  # Subspec which includes HealthCondition. Note that this
-  # will import HealthKit, which means that when submitting
-  # to the AppStore, special notes regarding the usage of
-  # HealthKit.
-  s.subspec '+Health' do |ss|
-    ss.platforms = { :ios => "8.0", :watchos => "2.0" }
-    ss.dependency 'Operations/Standard'
-    ss.source_files = [
-      'Sources/Extras/Health/iOS'
     ]
   end
 
@@ -129,16 +115,52 @@ session Advanced NSOperations: https://developer.apple.com/videos/wwdc/2015/?id=
     ]
   end
 	
+  # Subspec which includes CalendarCapability.
+  s.subspec '+Calendar' do |ss|
+    ss.platforms = { :ios => "8.0", :osx => "10.10", :watchos => "2.0" }
+    ss.dependency 'Operations/Standard'
+    ss.frameworks = 'EventKit'    
+    ss.source_files = [
+      'Sources/Extras/Calendar/Shared',
+    ]
+  end
+	
   # Subspec which includes CloudKit functionality
   s.subspec '+CloudKit' do |ss|
     ss.platforms = { :ios => "8.0", :tvos => "9.0", :osx => "10.10" }
     ss.dependency 'Operations/Standard'
     ss.frameworks = 'CloudKit'    
     ss.source_files = [
-      'Sources/Features/Shared/CloudCapability.swift',
-      'Sources/Features/Shared/CloudKitInterface.swift',
-      'Sources/Features/Shared/CloudKitOperation.swift',
-      'Sources/Features/Shared/CloudKitOperationExtensions.swift'
+      'Sources/Extras/CloudKit/Shared'
+    ]
+  end
+
+  # Subspec which includes HealthCondition.
+  s.subspec '+Health' do |ss|
+    ss.platforms = { :ios => "8.0", :watchos => "2.0" }
+    ss.dependency 'Operations/Standard'
+    ss.source_files = [
+      'Sources/Extras/Health/iOS'
+    ]
+  end
+
+  # Subspec which includes Passbook functionality
+  s.subspec '+Location' do |ss|
+    ss.platforms = { :ios => "8.0" }
+    ss.dependency 'Operations/Standard'
+    ss.frameworks = 'CoreLocation'
+    ss.source_files = [
+      'Sources/Extras/Location/iOS'
+    ]
+  end
+
+  # Subspec which includes Passbook functionality
+  s.subspec '+Passbook' do |ss|
+    ss.platforms = { :ios => "8.0" }
+    ss.dependency 'Operations/Standard'
+    ss.frameworks = 'PassKit'
+    ss.source_files = [
+      'Sources/Extras/Passbook/iOS'
     ]
   end
 	
@@ -148,19 +170,10 @@ session Advanced NSOperations: https://developer.apple.com/videos/wwdc/2015/?id=
     ss.dependency 'Operations/Standard'
     ss.frameworks = 'Photos'
     ss.source_files = [
-      'Sources/Features/iOS/PhotosCapability.swift'
+      'Sources/Extras/Photos/iOS'
     ]
-  end
-	
-  # Subspec which includes Passbook functionality
-  s.subspec '+Passbook' do |ss|
-    ss.platforms = { :ios => "8.0" }
-    ss.dependency 'Operations/Standard'
-    ss.frameworks = 'PassKit'
-    ss.source_files = [
-      'Sources/Features/iOS/PassbookCapability.swift'
-    ]
-  end
+  end	
+
 end
 
 

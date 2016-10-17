@@ -33,30 +33,44 @@ class TestableRemoteNotificationRegistrar: RemoteNotificationRegistrarType {
 
 class RemoteNotificationConditionTests: OperationTests {
 
+    var registrar: TestableRemoteNotificationRegistrar!
+    var condition: RemoteNotificationCondition!
+
+    override func setUp() {
+        super.setUp()
+        registrar = TestableRemoteNotificationRegistrar()
+        condition = RemoteNotificationCondition()
+        condition.registrar = registrar
+    }
+
+    override func tearDown() {
+        registrar = nil
+        condition = nil
+        super.tearDown()
+    }
+
     func test__condition_succeeds__when_registration_succeeds() {
-        let registrar = TestableRemoteNotificationRegistrar()
-
         let operation = TestOperation()
-        operation.addCondition(RemoteNotificationCondition(registrar: registrar))
-
-        addCompletionBlockToTestOperation(operation, withExpectation: expectationWithDescription("Test: \(#function)"))
-        runOperation(operation)
-        waitForExpectationsWithTimeout(3, handler: nil)
-
+        operation.addCondition(condition)
+        waitForOperation(operation)
         XCTAssertTrue(operation.didExecute)
     }
 
     func test__condition_fails__when_registration_fails() {
-        let registrar = TestableRemoteNotificationRegistrar(error: NSError(domain: "me.danthorpe.Operations", code: -10_001, userInfo: nil))
+        registrar = TestableRemoteNotificationRegistrar(error: NSError(domain: "me.danthorpe.Operations", code: -10_001, userInfo: nil))
+        condition.registrar = registrar
 
         let operation = TestOperation()
-        operation.addCondition(RemoteNotificationCondition(registrar: registrar))
+        operation.addCondition(condition)
 
-        let expectation = expectationWithDescription("Test: \(#function)")
+        weak var expectation = expectationWithDescription("Test: \(#function)")
         var receivedErrors = [ErrorType]()
         operation.addObserver(DidFinishObserver { _, errors in
             receivedErrors = errors
-            expectation.fulfill()
+            dispatch_async(Queue.Main.queue, {
+                guard let expectation = expectation else { print("Test: \(#function): Finished expectation after timeout"); return }
+                expectation.fulfill()
+            })
         })
 
         runOperation(operation)
